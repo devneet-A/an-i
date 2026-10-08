@@ -15,6 +15,7 @@ st.set_page_config(
 
 pages = [
     st.Page("pages/live.py", title="Live", icon="🔴", default=True),
+    st.Page("pages/analysis.py", title="Analysis", icon="📈"),
 ]
 
 st.navigation(pages).run()
