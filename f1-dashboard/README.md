@@ -24,7 +24,7 @@ copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and fill it 
 
 ```bash
 pip install pytest
-pytest -q          # all logic tests (34); no network needed
+pytest -q          # all logic tests (39); no network needed
 ```
 
 ## Layout

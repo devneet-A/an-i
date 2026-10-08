@@ -19,13 +19,30 @@ PLOTLY_CONFIG = {"displaylogo": False,
 FIRST_YEAR = 2023  # OpenF1 data starts in 2023
 
 
+# Reasons API calls failed during this run, so "no data" can say *why*.
+errors: list[str] = []
+
+
 def safe(fn: Callable[..., pd.DataFrame], *args: Any, **kwargs: Any) -> pd.DataFrame:
-    """Call an API function; on failure show a warning and return an empty table."""
+    """Call an API function; on failure remember why and return an empty table."""
     try:
         return fn(*args, **kwargs)
     except APIError as exc:
-        st.warning(str(exc))
+        if str(exc) not in errors:
+            errors.append(str(exc))
         return pd.DataFrame()
+
+
+def stop_with_reason(empty_message: str) -> None:
+    """Explain an empty result: an API failure (with a retry button) or
+    genuinely no data, then stop the page."""
+    if errors:
+        st.error("Couldn't load data from OpenF1: " + " ".join(errors))
+        # Cached results are fine to drop: clearing just forces fresh requests.
+        st.button("Try again", on_click=st.cache_data.clear, type="primary")
+    else:
+        st.info(empty_message)
+    st.stop()
 
 
 def show(fig, table: pd.DataFrame) -> None:
@@ -56,8 +73,7 @@ meetings = safe(openf1.get_meetings, year)
 if not meetings.empty:
     meetings = meetings[meetings["date_start"] <= now].iloc[::-1]  # newest first
 if meetings.empty:
-    st.info(f"No completed events for {year} yet.")
-    st.stop()
+    stop_with_reason(f"No events have started in {year} yet.")
 with col_gp:
     meeting_key = st.selectbox(
         "Grand Prix", meetings["meeting_key"].tolist(),
@@ -67,8 +83,7 @@ sessions = safe(openf1.get_sessions, meeting_key=meeting_key)
 if not sessions.empty:
     sessions = sessions[sessions["date_start"] <= now]
 if sessions.empty:
-    st.info("No sessions have started for this event yet.")
-    st.stop()
+    stop_with_reason("No sessions have started for this event yet.")
 with col_session:
     # Default to the last session of the weekend (usually the race).
     session_key = st.selectbox(
@@ -86,8 +101,11 @@ with st.spinner("Loading laps and tyre data..."):
     stints = safe(openf1.get_stints, session_key, live=fresh)
 
 if drivers.empty or laps.empty:
-    st.info("No lap data for this session.")
-    st.stop()
+    stop_with_reason("OpenF1 has no lap data for this session. That's normal for some "
+                     "sessions (e.g. testing) and for ones that only just finished: "
+                     "try again in a few minutes.")
+if errors:  # e.g. stints failed but laps loaded: show what's missing, carry on
+    st.warning("Some data couldn't be loaded: " + " ".join(errors))
 
 styles = analysis.driver_styles(drivers)
 order = [n for n in (analysis.finishing_order(laps) if is_race else analysis.best_lap_order(laps))
@@ -156,8 +174,11 @@ with tabs["Telemetry"]:
                 st.info(f"No timed lap with telemetry for {styles[n]['code']}.")
                 continue
             end = lap["date_start"] + timedelta(seconds=float(lap["lap_duration"]))
+            failed_before = len(errors)
             car = analysis.add_distance(safe(openf1.get_car_data, session_key, n, lap["date_start"], end))
             if car.empty:
+                reason = errors[-1] if len(errors) > failed_before else "OpenF1 has none for that lap."
+                st.info(f"No telemetry for {styles[n]['code']}: {reason}")
                 continue
             traces[n] = car
             summary.append({"driver": styles[n]["code"], "lap": int(lap["lap_number"]),

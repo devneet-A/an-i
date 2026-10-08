@@ -144,7 +144,14 @@ def _fetch_live(endpoint: str, params: Params) -> pd.DataFrame:
 def _query(endpoint: str, params: list[tuple[str, Any]], live: bool) -> pd.DataFrame:
     """Normalise params to strings and dispatch to the right cache."""
     clean: Params = tuple((k, str(v)) for k, v in params if v is not None)
-    return (_fetch_live if live else _fetch_static)(endpoint, clean)
+    if live:
+        return _fetch_live(endpoint, clean)
+    df = _fetch_static(endpoint, clean)
+    if df.empty:
+        # Don't keep an empty answer for 6 hours: it may just mean OpenF1
+        # hasn't processed the data yet. Drop it so the next run asks again.
+        _fetch_static.clear(endpoint, clean)
+    return df
 
 
 def _session_params(session_key: SessionKey, driver_numbers: list[int] | None,
