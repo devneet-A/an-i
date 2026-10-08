@@ -36,7 +36,7 @@ def _style(fig: go.Figure, height: int, y_title: str, x_title: str = "Lap") -> g
         height=height,
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
-        font=dict(color=INK_MUTED, size=12),
+        font=dict(family="Titillium Web, sans-serif", color=INK_MUTED, size=12),
         margin=dict(l=8, r=8, t=8, b=8),
         # Legend across the top: on a phone a side legend eats half the width.
         legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0, font=dict(color=INK),

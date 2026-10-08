@@ -1,15 +1,18 @@
 """Entry point: `streamlit run app.py`.
 
-st.navigation (instead of the automatic /pages sidebar) lets us choose page
-titles, icons and order ourselves, and make the Live page the home page.
+st.navigation sets up the pages; position="hidden" turns off Streamlit's
+sidebar menu because we draw our own floating pill navigation (lib/ui.py).
 """
 
 import streamlit as st
+
+from lib import ui
 
 st.set_page_config(
     page_title="F1 Live Dashboard",
     page_icon="🏎️",
     layout="wide",  # use the full screen width for timing tables
+    initial_sidebar_state="collapsed",
 )
 
 pages = [
@@ -19,4 +22,7 @@ pages = [
     st.Page("pages/calendar.py", title="Calendar", icon="🗓️"),
 ]
 
-st.navigation(pages).run()
+page = st.navigation(pages, position="hidden")
+ui.inject_css()
+ui.pill_nav(pages, current=page)
+page.run()

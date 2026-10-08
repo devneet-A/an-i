@@ -5,7 +5,7 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from lib import charts, jolpica, standings
+from lib import charts, jolpica, standings, ui
 from lib.http import APIError
 from lib.timeutils import now_utc
 
@@ -20,13 +20,6 @@ def tidy_points(df: pd.DataFrame, cols: list[str]) -> pd.DataFrame:
         if (df[c] % 1 == 0).all():
             df[c] = df[c].astype(int)
     return df
-
-
-def table(df: pd.DataFrame, columns: dict) -> None:
-    """Standings table with the same team-colour stripe as the timing tower."""
-    styled = df.style.map(lambda c: f"background-color: {c}; color: {c}", subset=["colour"])
-    st.dataframe(styled, hide_index=True, width="stretch", column_order=list(columns),
-                 column_config=columns, height=(len(df) + 1) * 35 + 3)
 
 
 st.title("Championship standings")
@@ -72,28 +65,13 @@ c3.metric("After round", int(leader["round"]))
 tab_drivers, tab_teams, tab_progress = st.tabs(["Drivers", "Constructors", "Points progression"])
 
 with tab_drivers:
-    table(drivers, {
-        "position": st.column_config.NumberColumn("P", width=40),
-        "colour": st.column_config.TextColumn("", width=8),
-        "driver": st.column_config.TextColumn("Driver"),
-        "points": st.column_config.NumberColumn("Pts", width=60),
-        "gap": st.column_config.NumberColumn("Gap", width=60, help="Points behind the leader"),
-        "wins": st.column_config.NumberColumn("Wins", width=56),
-        "team": st.column_config.TextColumn("Team"),
-    })
+    st.html(ui.standings_html(drivers, "driver", sub_col="team"))
 
 with tab_teams:
     if teams.empty:
         st.info("No constructors' standings yet.")
     else:
-        table(teams, {
-            "position": st.column_config.NumberColumn("P", width=40),
-            "colour": st.column_config.TextColumn("", width=8),
-            "team": st.column_config.TextColumn("Team"),
-            "points": st.column_config.NumberColumn("Pts", width=60),
-            "gap": st.column_config.NumberColumn("Gap", width=60, help="Points behind the leader"),
-            "wins": st.column_config.NumberColumn("Wins", width=56),
-        })
+        st.html(ui.standings_html(teams, "team"))
 
 with tab_progress:
     if points.empty:

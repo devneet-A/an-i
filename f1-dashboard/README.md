@@ -24,7 +24,7 @@ copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and fill it 
 
 ```bash
 pip install pytest
-pytest -q          # all logic tests (30); no network needed
+pytest -q          # all logic tests (34); no network needed
 ```
 
 ## Layout
@@ -43,6 +43,7 @@ lib/analysis.py     race trace maths: positions/gaps per lap, stints, telemetry 
 lib/charts.py       Plotly figures with a shared dark style
 lib/standings.py    team colours for Jolpica data, gaps, cumulative points
 lib/schedule.py     calendar status (done / next / upcoming), weekend labels
+lib/ui.py           look & feel: global CSS, floating pill nav, TV-style HTML pieces
 tests/              pytest tests
 scripts/            command-line helpers
 .streamlit/         theme (config.toml) and secrets template

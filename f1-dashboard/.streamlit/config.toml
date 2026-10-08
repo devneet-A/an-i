@@ -1,11 +1,17 @@
 # Dark "F1 broadcast" theme. Streamlit reads this file automatically.
+# Restart `streamlit run` after editing: theme changes aren't hot-reloaded.
 [theme]
 base = "dark"
-primaryColor = "#E10600"            # F1 red
+primaryColor = "#E10600"            # F1 red: toggles, active tab, buttons
 backgroundColor = "#0B0B0F"
-secondaryBackgroundColor = "#16161D"
+secondaryBackgroundColor = "#14141B"
 textColor = "#F2F2F2"
-font = "sans serif"
+borderColor = "#262630"
+# Titillium Web is the closest free font to F1's broadcast lettering.
+# If Google Fonts can't load, the browser falls back to its sans-serif.
+font = "Titillium Web:https://fonts.googleapis.com/css2?family=Titillium+Web:wght@400;600;700&display=swap, sans-serif"
+baseRadius = "small"                # tighter corners, more "timing screen"
+showWidgetBorder = true
 
 [client]
 # Hide the "Deploy" / developer menu items for viewers.

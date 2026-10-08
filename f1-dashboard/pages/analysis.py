@@ -46,27 +46,30 @@ st.title("Session analysis")
 now = now_utc()
 
 # --------------------------------------------------------------------------
-# Sidebar: year -> Grand Prix -> session -> drivers
+# Filter row: year -> Grand Prix -> session, then drivers. One row of filters
+# above everything they control (on a phone the columns stack).
 # --------------------------------------------------------------------------
-with st.sidebar:
-    st.header("Session")
+col_year, col_gp, col_session = st.columns([1, 2, 1.4])
+with col_year:
     year = st.selectbox("Year", list(range(now.year, FIRST_YEAR - 1, -1)))
-    meetings = safe(openf1.get_meetings, year)
-    if not meetings.empty:
-        meetings = meetings[meetings["date_start"] <= now].iloc[::-1]  # newest first
-    if meetings.empty:
-        st.info(f"No completed events for {year} yet.")
-        st.stop()
+meetings = safe(openf1.get_meetings, year)
+if not meetings.empty:
+    meetings = meetings[meetings["date_start"] <= now].iloc[::-1]  # newest first
+if meetings.empty:
+    st.info(f"No completed events for {year} yet.")
+    st.stop()
+with col_gp:
     meeting_key = st.selectbox(
         "Grand Prix", meetings["meeting_key"].tolist(),
         format_func=dict(zip(meetings["meeting_key"], meetings["meeting_name"])).get)
 
-    sessions = safe(openf1.get_sessions, meeting_key=meeting_key)
-    if not sessions.empty:
-        sessions = sessions[sessions["date_start"] <= now]
-    if sessions.empty:
-        st.info("No sessions have started for this event yet.")
-        st.stop()
+sessions = safe(openf1.get_sessions, meeting_key=meeting_key)
+if not sessions.empty:
+    sessions = sessions[sessions["date_start"] <= now]
+if sessions.empty:
+    st.info("No sessions have started for this event yet.")
+    st.stop()
+with col_session:
     # Default to the last session of the weekend (usually the race).
     session_key = st.selectbox(
         "Session", sessions["session_key"].tolist(), index=len(sessions) - 1,
@@ -90,16 +93,15 @@ styles = analysis.driver_styles(drivers)
 order = [n for n in (analysis.finishing_order(laps) if is_race else analysis.best_lap_order(laps))
          if n in styles]
 
-with st.sidebar:
-    selected = st.multiselect(
-        "Drivers", order, default=order[:5],
-        format_func=lambda n: f"{styles[n]['code']} · {styles[n]['team']}")
-    st.caption("Teammates share a colour; the second driver is drawn dashed.")
+selected = st.multiselect(
+    "Drivers", order, default=order[:5],
+    format_func=lambda n: f"{styles[n]['code']} · {styles[n]['team']}",
+    help="Teammates share a colour; the second driver is drawn dashed.")
 
 st.caption(f"{meetings.set_index('meeting_key').loc[meeting_key, 'meeting_name']} · "
            f"{session['session_name']} · {format_ist(session['date_start'])}")
 if not selected:
-    st.info("Pick at least one driver in the sidebar.")
+    st.info("Pick at least one driver above.")
     st.stop()
 
 # --------------------------------------------------------------------------

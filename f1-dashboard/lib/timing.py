@@ -86,7 +86,7 @@ def build_tower(drivers: pd.DataFrame, positions: pd.DataFrame, intervals: pd.Da
         tower["interval"] = ""
 
     # ---- tyres -----------------------------------------------------------
-    tower["tyre"] = ""
+    tower["tyre"], tower["compound"], tower["tyre_age"] = "", "", 0
     if not stints.empty:
         stint = (stints.sort_values("stint_number")
                        .drop_duplicates("driver_number", keep="last").set_index("driver_number"))
@@ -95,6 +95,8 @@ def build_tower(drivers: pd.DataFrame, positions: pd.DataFrame, intervals: pd.Da
         laps_on_set = (tower["driver_number"].map(current_lap)
                        - tower["driver_number"].map(stint["lap_start"])).clip(lower=0)
         age = tower["driver_number"].map(stint["tyre_age_at_start"]) + laps_on_set.fillna(0)
+        tower["compound"] = compound.astype(str).str.upper()
+        tower["tyre_age"] = age.fillna(0).astype(int)
         tower["tyre"] = [
             f"{COMPOUND_ICON.get(str(c).upper(), '⚫')} {str(c).title()[:1]} · {int(a)}"
             if c else ""
@@ -109,6 +111,48 @@ def build_tower(drivers: pd.DataFrame, positions: pd.DataFrame, intervals: pd.Da
     tower["position"] = pd.to_numeric(tower["position"], errors="coerce")
     tower = tower.sort_values(["position", "best_lap_s"], na_position="last").reset_index(drop=True)
     tower["position"] = tower["position"].astype("Int64")  # whole numbers, blanks allowed
-    # Team goes last: on a phone the most useful columns fit before scrolling.
+    # Display columns first (team last, so phones show the useful ones), then the
+    # raw values the TV-style tower uses for colour coding.
     return tower[["position", "team_colour", "name_acronym", "gap", "interval",
-                  "last_lap", "best_lap", "tyre", "pits", "team_name"]]
+                  "last_lap", "best_lap", "tyre", "pits", "team_name",
+                  "compound", "tyre_age", "last_lap_s", "best_lap_s"]]
+
+
+def track_status(race_control: pd.DataFrame) -> str | None:
+    """Current track state from race control, like the TV graphic.
+
+    Returns "CLEAR", "YELLOW", "SC", "VSC", "RED", "FINISHED" or None. Yellow
+    flags limited to one sector don't change the whole-track state.
+    """
+    if race_control.empty:
+        return None
+    state: str | None = None
+    for m in race_control.sort_values("date").itertuples(index=False):
+        flag = str(getattr(m, "flag", "") or "")
+        msg = str(getattr(m, "message", "") or "").upper()
+        scope = str(getattr(m, "scope", "") or "")
+        if getattr(m, "category", "") == "SafetyCar":
+            if "DEPLOYED" in msg:
+                state = "VSC" if "VIRTUAL" in msg else "SC"
+            # "ENDING" / "IN THIS LAP": still neutralised until the green flag.
+        elif flag == "RED":
+            state = "RED"
+        elif flag == "CHEQUERED":
+            state = "FINISHED"
+        elif flag in ("GREEN", "CLEAR") and scope in ("Track", ""):
+            state = "CLEAR"
+        elif flag in ("YELLOW", "DOUBLE YELLOW") and scope == "Track":
+            state = "YELLOW"
+    return state
+
+
+def lap_label(laps: pd.DataFrame, race_control: pd.DataFrame, session_type: str) -> str:
+    """'<span>LAP</span> 34' for races, '<span>SESSION</span> Q3' in qualifying."""
+    if session_type == "Race" and not laps.empty:
+        return f"<span>LAP</span>{int(laps['lap_number'].max())}"
+    if "Qualifying" in session_type and "qualifying_phase" in race_control.columns:
+        phase = race_control.sort_values("date")["qualifying_phase"].dropna()
+        if not phase.empty:
+            prefix = "SQ" if session_type.startswith("Sprint") else "Q"
+            return f"<span>SESSION</span>{prefix}{int(phase.iloc[-1])}"
+    return ""
