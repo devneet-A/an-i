@@ -1,0 +1,9 @@
+# Streamlit Community Cloud installs these automatically from this file.
+# Lower bounds = features we rely on (st.navigation, st.fragment(run_every=...)).
+# Upper bounds = don't silently jump to a new major version that could break things.
+streamlit>=1.50,<2
+pandas>=2.2,<4
+plotly>=5.24,<8
+requests>=2.32,<3
+# Time-zone database so "Asia/Kolkata" works everywhere (Windows has no system tz data).
+tzdata>=2024.1

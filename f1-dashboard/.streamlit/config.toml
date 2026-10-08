@@ -1,0 +1,12 @@
+# Dark "F1 broadcast" theme. Streamlit reads this file automatically.
+[theme]
+base = "dark"
+primaryColor = "#E10600"            # F1 red
+backgroundColor = "#0B0B0F"
+secondaryBackgroundColor = "#16161D"
+textColor = "#F2F2F2"
+font = "sans serif"
+
+[client]
+# Hide the "Deploy" / developer menu items for viewers.
+toolbarMode = "minimal"
