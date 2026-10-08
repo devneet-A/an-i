@@ -24,7 +24,7 @@ copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and fill it 
 
 ```bash
 pip install pytest
-pytest -q          # detection, timing tower, live feed, analysis; no network
+pytest -q          # all logic tests (30); no network needed
 ```
 
 ## Layout
@@ -41,6 +41,8 @@ lib/timing.py       builds the timing tower table (pure pandas)
 lib/live_feed.py    one shared, incremental OpenF1 poller per live session
 lib/analysis.py     race trace maths: positions/gaps per lap, stints, telemetry distance
 lib/charts.py       Plotly figures with a shared dark style
+lib/standings.py    team colours for Jolpica data, gaps, cumulative points
+lib/schedule.py     calendar status (done / next / upcoming), weekend labels
 tests/              pytest tests
 scripts/            command-line helpers
 .streamlit/         theme (config.toml) and secrets template

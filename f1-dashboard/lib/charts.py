@@ -161,3 +161,26 @@ def telemetry_chart(laps: dict[int, pd.DataFrame], styles: Styles) -> go.Figure:
             fig.update_xaxes(title_text="", row=row, col=1)
     fig.update_layout(hovermode="x unified")
     return fig
+
+
+def progression_chart(totals: pd.DataFrame, by: str, colours: dict[str, str],
+                      dashes: dict[str, str]) -> go.Figure:
+    """Championship points after each round, one line per driver or team."""
+    fig = go.Figure()
+    # Draw the leader last so their line sits on top.
+    final = totals[totals["round"] == totals["round"].max()].sort_values("total")
+    for name in final[by]:
+        d = totals[totals[by] == name]
+        fig.add_trace(go.Scatter(
+            x=d["round"], y=d["total"], mode="lines+markers", name=str(name),
+            line=dict(color=colours.get(name, "#888888"), width=2, dash=dashes.get(name, "solid")),
+            marker=dict(size=8, color=colours.get(name, "#888888"), line=dict(color=SURFACE, width=2)),
+            hovertemplate=f"{name} %{{y:.0f}} pts<extra></extra>",
+        ))
+    # Legend in championship order (leader first) instead of drawing order.
+    for rank, trace in enumerate(reversed(fig.data)):
+        trace.legendrank = rank
+    fig.update_layout(hovermode="x unified")
+    _style(fig, 460, "Points", "Round")
+    fig.update_xaxes(dtick=1)
+    return fig

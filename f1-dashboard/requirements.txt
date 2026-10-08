@@ -1,7 +1,7 @@
 # Streamlit Community Cloud installs these automatically from this file.
-# Lower bounds = features we rely on (st.navigation, st.fragment(run_every=...)).
+# Lower bounds = the versions this app was tested with (st.navigation, st.fragment, st.badge...).
 # Upper bounds = don't silently jump to a new major version that could break things.
-streamlit>=1.50,<2
+streamlit>=1.65,<2
 pandas>=2.2,<4
 plotly>=5.24,<8
 requests>=2.32,<3
