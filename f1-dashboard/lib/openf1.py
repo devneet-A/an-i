@@ -148,11 +148,11 @@ def _query(endpoint: str, params: list[tuple[str, Any]], live: bool) -> pd.DataF
 
 
 def _session_params(session_key: SessionKey, driver_numbers: list[int] | None,
-                    since: datetime | None) -> list[tuple[str, Any]]:
+                    since: datetime | None, date_field: str = "date") -> list[tuple[str, Any]]:
     params: list[tuple[str, Any]] = [("session_key", session_key)]
     params += [("driver_number", n) for n in (driver_numbers or [])]
     if since is not None:
-        params.append(_filter("date", ">", since))  # only rows newer than we have
+        params.append(_filter(date_field, ">", since))  # only rows newer than we have
     return params
 
 
@@ -196,9 +196,13 @@ def get_drivers(session_key: SessionKey, live: bool = False) -> pd.DataFrame:
 
 
 def get_laps(session_key: SessionKey, driver_numbers: list[int] | None = None,
-             live: bool = False) -> pd.DataFrame:
-    """Lap-by-lap timing (lap_duration, sectors, speed traps)."""
-    return _query("laps", _session_params(session_key, driver_numbers, None), live=live)
+             live: bool = False, since: datetime | None = None) -> pd.DataFrame:
+    """Lap-by-lap timing (lap_duration, sectors, speed traps).
+
+    `since` filters on date_start (laps have no "date" column).
+    """
+    return _query("laps", _session_params(session_key, driver_numbers, since, "date_start"),
+                  live=live)
 
 
 def get_positions(session_key: SessionKey, live: bool = False,

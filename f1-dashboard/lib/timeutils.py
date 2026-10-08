@@ -37,3 +37,11 @@ def format_countdown(delta: timedelta) -> str:
     if hours:
         return f"{hours}h {minutes}m"
     return f"{minutes}m" if minutes else "< 1m"
+
+
+def format_laptime(seconds: float | None) -> str:
+    """92.456 -> '1:32.456'. Missing -> '' (blank cell reads better than 'nan')."""
+    if seconds is None or pd.isna(seconds):
+        return ""
+    minutes, secs = divmod(float(seconds), 60)
+    return f"{int(minutes)}:{secs:06.3f}" if minutes else f"{secs:.3f}"

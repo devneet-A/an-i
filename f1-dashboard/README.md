@@ -24,7 +24,7 @@ copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and fill it 
 
 ```bash
 pip install pytest
-pytest -q          # session-detection logic, no network needed
+pytest -q          # detection, timing tower, live feed; no network needed
 ```
 
 ## Layout
@@ -36,7 +36,9 @@ lib/http.py         shared requests.Session: timeouts, retries, rate-limit throt
 lib/openf1.py       OpenF1 client -> pandas DataFrames, cached
 lib/jolpica.py      Jolpica client -> pandas DataFrames, cached
 lib/session_detect.py  decides: live session vs latest completed, next session
-lib/timeutils.py    UTC -> IST formatting, countdowns
+lib/timeutils.py    UTC -> IST formatting, countdowns, lap times
+lib/timing.py       builds the timing tower table (pure pandas)
+lib/live_feed.py    one shared, incremental OpenF1 poller per live session
 tests/              pytest tests
 scripts/            command-line helpers
 .streamlit/         theme (config.toml) and secrets template
