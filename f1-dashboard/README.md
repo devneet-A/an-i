@@ -20,6 +20,13 @@ streamlit run app.py              # opens http://localhost:8501
 Live (real-time) OpenF1 data is optional and needs a paid OpenF1 account:
 copy `.streamlit/secrets.toml.example` to `.streamlit/secrets.toml` and fill it in.
 
+## Tests
+
+```bash
+pip install pytest
+pytest -q          # session-detection logic, no network needed
+```
+
 ## Layout
 
 ```
@@ -28,6 +35,9 @@ pages/              one file per page (UI only, no HTTP calls)
 lib/http.py         shared requests.Session: timeouts, retries, rate-limit throttle
 lib/openf1.py       OpenF1 client -> pandas DataFrames, cached
 lib/jolpica.py      Jolpica client -> pandas DataFrames, cached
+lib/session_detect.py  decides: live session vs latest completed, next session
+lib/timeutils.py    UTC -> IST formatting, countdowns
+tests/              pytest tests
 scripts/            command-line helpers
 .streamlit/         theme (config.toml) and secrets template
 ```
